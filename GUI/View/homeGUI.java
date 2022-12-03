@@ -1,3 +1,4 @@
+package View;
 import java.awt.EventQueue;
 import javax.swing.*;
 import javax.swing.JFrame;
@@ -130,6 +131,12 @@ public class homeGUI extends JFrame {
         
         panel.add(btnConfig);
         
+        JButton btnEditRules = new JButton("Edit Rules");
+        
+        btnEditRules.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        btnEditRules.setBounds(128, 162, 89, 23);
+        panel.add(btnEditRules);
+        
         JButton btnRun = new JButton("Run");
         btnRun.setFont(new Font("Segoe UI", Font.PLAIN, 11));
         btnRun.setBounds(10, 218, 89, 23);
@@ -202,9 +209,15 @@ public class homeGUI extends JFrame {
             }
         });
 
-        frame.setVisible(true);
+        // edit rules
+        btnEditRules.addActionListener(new ActionListener() {
+        	public void actionPerformed(ActionEvent e) {
+                ruleEdit re = new ruleEdit();
+                re.createFrame();
+        	}
+        });
 
-        
+        frame.setVisible(true);
 	}
     public void createTable(boolean isStarted) throws Exception {
         id = 1;
