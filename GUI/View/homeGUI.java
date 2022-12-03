@@ -241,6 +241,7 @@ public class homeGUI extends JFrame {
                             if (output.contains("[**]")) {
                                 analyzeLine al = new analyzeLine(output);
                                 Vector<String> list = al.getList();
+            
                                 Object[] row = new Object[6];
                                 row[0] = "#" + id; // id
                                 row[1] = list.elementAt(1); // message

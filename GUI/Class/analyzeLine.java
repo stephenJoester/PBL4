@@ -76,8 +76,9 @@ public class analyzeLine {
         if (matcher.find()) {
             String temp = matcher.group();
             list.add(temp);
-            inputNew = input.replace(temp, "");
+            inputNew = input.replaceFirst(temp, "");
         } 
+        // System.out.println(inputNew);
         // Tim destination
         matcher = pattern.matcher(inputNew);
         if (matcher.find()) {
