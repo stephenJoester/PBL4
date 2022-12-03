@@ -18,6 +18,7 @@ import Class.analyzeLine;
 import Class.comboItem;
 import Class.interfaceItem;
 import Class.listInterfaces;
+import Class.Piechart.*;
 
 import javax.swing.border.EtchedBorder;
 import java.awt.event.ItemListener;
@@ -31,7 +32,13 @@ public class homeGUI extends JFrame {
     public static JTable table;
     public static JTextArea textArea;
     static int id;
-
+    static boolean isStarted;
+    static Thread task;
+    private Process proc;
+    private PieChart piechart;
+    private JPanel panelChart;
+    private Vector<String> listProtocol = new Vector<String>();
+    private ModelPieChart tcp, icmp, udp, ip, arp;
 	/**
 	 * Launch the application.
 	 */
@@ -72,7 +79,7 @@ public class homeGUI extends JFrame {
         table.setModel(model);
 
         JScrollPane scrollPane1 = new JScrollPane(table);
-        scrollPane1.setBounds(10,239,721,321);
+        scrollPane1.setBounds(10,265,721,295);
         frame.getContentPane().add(scrollPane1);
         
         JPanel panel = new JPanel();
@@ -112,6 +119,7 @@ public class homeGUI extends JFrame {
         panel.add(lbIPv4);
         
         JButton btnConfig = new JButton("Config");
+        btnConfig.setFont(new Font("Segoe UI", Font.PLAIN, 11));
         // event listener
         btnConfig.addActionListener(new ActionListener() {
         	public void actionPerformed(ActionEvent e) {
@@ -123,17 +131,29 @@ public class homeGUI extends JFrame {
         panel.add(btnConfig);
         
         JButton btnRun = new JButton("Run");
-        btnRun.setBounds(454, 184, 89, 23);
-        btnRun.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-
-            }
-        });
+        btnRun.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        btnRun.setBounds(10, 218, 89, 23);
+        
         frame.getContentPane().add(btnRun);
         
         JButton btnStop = new JButton("Stop");
-        btnStop.setBounds(564, 184, 89, 23);
+        btnStop.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        btnStop.setEnabled(false);
+        btnStop.setBounds(139, 218, 89, 23);
+        
         frame.getContentPane().add(btnStop);
+        
+        // Panel chart
+        panelChart = new JPanel();
+        panelChart.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
+        panelChart.setBounds(392, 11, 339, 243);
+        // init component 
+        initiComponents();
+        piechart.setChartType(PieChart.PeiChartType.DONUT_CHART);
+
+        panelChart.add(piechart);
+        frame.getContentPane().add(panelChart);
+
 
         Object[] row = new Object[6];
         row[0] = "ID test";
@@ -156,50 +176,141 @@ public class homeGUI extends JFrame {
         	}
         });
 
+        // Start process 
+        btnRun.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    createTable(true);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+                btnRun.setEnabled(false);
+                btnStop.setEnabled(true);
+            }
+        });
+
+        // Stop process
+        btnStop.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    createTable(false);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+                btnRun.setEnabled(true);
+                btnStop.setEnabled(false);
+            }
+        });
+
         frame.setVisible(true);
 
         
 	}
-    public void createTable() throws Exception {
+    public void createTable(boolean isStarted) throws Exception {
         id = 1;
 
+        // test 
         Thread t = new Thread() {
             public void run() {
                 // processbuilder
                 try {
-                    ProcessBuilder builder = new ProcessBuilder("/bin/bash","-c","sudo snort -q -l /var/log/snort/ -i ens33 -A console -c /etc/snort/snort.conf");
-                    Process proc = builder.start();
+                    // if true -> start process
+                    if (isStarted) {
+                        ProcessBuilder builder = new ProcessBuilder("/bin/bash","-c","sudo snort -q -l /var/log/snort/ -i ens33 -A console -c /etc/snort/snort.conf");
+                        proc = builder.start();
 
-                    // Read the output
+                        // Read the output
 
-                    BufferedReader lineReader =  new BufferedReader(new InputStreamReader(proc.getInputStream()));
-                    String output;
-                    while ((output = lineReader.readLine()) != null) {
+                        BufferedReader lineReader =  new BufferedReader(new InputStreamReader(proc.getInputStream()));
+                        String output;
+                        while ((output = lineReader.readLine()) != null) {
 
-                        if (output.contains("[**]")) {
-                            analyzeLine al = new analyzeLine(output);
-                            Vector<String> list = al.getList();
-                            Object[] row = new Object[6];
-                            row[0] = "#" + id; // id
-                            row[1] = list.elementAt(1); // message
-                            row[2] = list.elementAt(0); // timestamp
-                            row[3] = list.elementAt(3); // source
-                            row[4] = list.elementAt(4); // destination
-                            row[5] = list.elementAt(2); // protocol
-                            model.addRow(row);
-                            table.setModel(model);
-                            id++;
+                            if (output.contains("[**]")) {
+                                analyzeLine al = new analyzeLine(output);
+                                Vector<String> list = al.getList();
+                                Object[] row = new Object[6];
+                                row[0] = "#" + id; // id
+                                row[1] = list.elementAt(1); // message
+                                row[2] = list.elementAt(0); // timestamp
+                                row[3] = list.elementAt(3); // source
+                                row[4] = list.elementAt(4); // destination
+                                row[5] = list.elementAt(2); // protocol
+                                if (!listProtocol.contains(list.elementAt(2))) {
+                                    String name = list.elementAt(2);
+                                    listProtocol.addElement(name); 
+                                    
+                                    switch(name) {
+                                        case "TCP" : {
+                                            tcp = new ModelPieChart(name,1,new Color(23, 126, 238));
+                                            piechart.addData(tcp);
+                                            break;
+                                        }
+                                        case "UDP" : {
+                                            udp = new ModelPieChart(name,1,new Color(221, 65, 65));
+                                            piechart.addData(udp);
+                                            break;
+                                        }
+                                        case "ICMP" : {
+                                            icmp = new ModelPieChart(name,1,new Color(47, 157, 64));
+                                            piechart.addData(icmp);
+                                            break;
+                                        }
+                                        case "IP" : {
+                                            ip = new ModelPieChart(name,1,new Color(204, 51, 153));
+                                            piechart.addData(ip);
+                                            break;
+                                        }
+                                        case "ARP" : {
+                                            arp = new ModelPieChart(name,1,new Color(204, 153, 0));
+                                            piechart.addData(arp);
+                                            break;
+                                        }
+                                    }
+                                    
+                                }   
+                                else {
+                                    String name = list.elementAt(2);
+                                    switch (name) {
+                                        case "TCP" : {
+                                            tcp.setValues(tcp.getValues()+1);
+                                            break;
+                                        }
+                                        case "UDP" : {
+                                            udp.setValues(udp.getValues()+1);
+                                            break;
+                                        }
+                                        case "ICMP" : {
+                                            icmp.setValues(icmp.getValues()+1);
+                                            break;
+                                        }
+                                        case "IP" : {
+                                            ip.setValues(ip.getValues()+1);
+                                            break;
+                                        }
+                                        case "ARP" : {
+                                            arp.setValues(arp.getValues()+1);
+                                            break;
+                                        }
+                                    }
+                                }
+                                model.addRow(row);
+                                table.setModel(model);
+                                id++;
+                            }
+                            
                         }
-                        
                     }
-                
+                    else {
+                        proc.destroy();
+
+                    }
+                    
+                    
                     proc.waitFor();
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
                 
-                
-
             }
         };
         t.start();
@@ -214,6 +325,28 @@ public class homeGUI extends JFrame {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
+    }
+    private void initiComponents() {
+        piechart = new PieChart();
+        piechart.setFont(new java.awt.Font("sansserif",1,12));
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(panelChart);
+        panelChart.setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(piechart, javax.swing.GroupLayout.DEFAULT_SIZE, 553, Short.MAX_VALUE)
+                .addContainerGap())
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(piechart, javax.swing.GroupLayout.DEFAULT_SIZE, 518, Short.MAX_VALUE)
+                .addContainerGap())
+        );
+        pack();
+        setLocationRelativeTo(null);
     }
 }
 

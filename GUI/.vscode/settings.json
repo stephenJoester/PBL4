@@ -1,0 +1,12 @@
+{
+  "java.project.referencedLibraries": {
+    "include": [
+      "lib/**/*.jar",
+      "d:\\NgHoangQuan\\Code_test\\Java\\KNCSDL\\mysql-connector-java-5.jar"
+    ],
+    "exclude": [
+      "lib/jfreechart-1.5.3.jar",
+      "d:\\NgHoangQuan\\Code_test\\PBL4\\javafx-sdk-19\\lib\\javafx-swt.jar"
+    ]
+  }
+}
