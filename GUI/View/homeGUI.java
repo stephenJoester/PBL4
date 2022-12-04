@@ -43,7 +43,7 @@ public class homeGUI extends JFrame {
 	/**
 	 * Launch the application.
 	 */
-	public static void main(String[] args)  throws Exception {
+	public static void createFrame()  throws Exception {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
@@ -64,7 +64,7 @@ public class homeGUI extends JFrame {
 		JFrame frame = new JFrame("Home");
         frame.getContentPane().setLayout(null);
         frame.setLocationRelativeTo(null);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
         frame.setBounds(100,100,757,610);
 
         model = new DefaultTableModel() {
