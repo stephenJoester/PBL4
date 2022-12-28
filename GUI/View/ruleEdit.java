@@ -31,6 +31,8 @@ import javax.swing.JTextArea;
 import javax.swing.JButton;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowAdapter;
 
 public class ruleEdit extends JFrame {
 
@@ -48,6 +50,18 @@ public class ruleEdit extends JFrame {
 				try {
 					ruleEdit frame = new ruleEdit();
 					frame.setVisible(true);
+                    frame.addWindowListener(new WindowAdapter() {
+                        public void windowClosing(WindowEvent e) {
+                            // Process change permission 
+                            try {
+                                ProcessBuilder builder = new ProcessBuilder("/bin/bash","-c","sudo chmod a-w /etc/snort/rules/local.rules");
+                                Process proc = builder.start();
+                                proc.waitFor();
+                            } catch (Exception ex) {
+                                ex.printStackTrace();
+                            }
+                        }
+                    });
 				} catch (Exception e) {
 					e.printStackTrace();
 				}

@@ -16,6 +16,8 @@ public class sensor {
     private String usedDiskPercentage;
     private String osVer;
     private String snortVer;
+    private String downloadSpeed;
+    private String uploadSpeed;
     public static String formatFileSize(double size, String type) {
         String hrSize = null;
     
@@ -108,10 +110,21 @@ public class sensor {
     } 
     public void speedTest() {
         try {
-            Process proc = new ProcessBuilder("/bin/bash","-c","speedtest").start();
+            String[] cmd = new String[] {"/bin/bash", "-c", "speedtest"};
+            Process proc = new ProcessBuilder(cmd).start();
             BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
             String output;
-            // while (())
+            while ((output = reader.readLine())!=null) {
+                if (output.contains("Download")) {
+                    String[] words = output.split("\\s+");
+                    downloadSpeed = words[1] + " " + words[2];
+                }
+                if (output.contains("Upload")) {
+                    String[] words = output.split("\\s+");
+                    uploadSpeed = words[1] + " " + words[2];
+                }
+            }
+            proc.waitFor();
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -156,6 +169,12 @@ public class sensor {
     }
     public String getDiskUsage() {
         return formatFileSize(usedDisk, "g") + " (" + usedDiskPercentage + ")";
+    }
+    public String getDonwloadSpeed() {
+        return downloadSpeed;
+    }
+    public String getUploadSpeed() {
+        return uploadSpeed;
     }
     public String getOS() {
         return "Ubuntu " + osVer;

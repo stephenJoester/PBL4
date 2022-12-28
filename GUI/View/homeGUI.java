@@ -45,8 +45,9 @@ public class homeGUI extends JFrame {
     private Vector<String> listProtocol = new Vector<String>();
     private ModelPieChart tcp, icmp, udp, ip, arp;
     private Thread alertThread;
-    private TimerTask task;
+    private TimerTask fileWatcher;
     private Timer timer;
+    private int lineMarker;
 	/**
 	 * Launch the application.
 	 */
@@ -276,7 +277,7 @@ public class homeGUI extends JFrame {
                     snort();
                     ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
                     
-                    Thread t = new Thread() {
+                    Thread t1 = new Thread() {
                         public void run() {
                             sensor s = new sensor();
                             String cpu_utilized = s.getCPUUtilized();
@@ -287,8 +288,18 @@ public class homeGUI extends JFrame {
                             lbVersion.setText(s.getSnortVer());
                         }
                     };
-                    executorService.scheduleAtFixedRate(t, 0, 5, TimeUnit.SECONDS);
+                    executorService.scheduleAtFixedRate(t1, 0, 5, TimeUnit.SECONDS);
                     
+                    Thread t2 = new Thread() {
+                        public void run() {
+                            sensor s = new sensor();
+                            s.speedTest();
+                            lbReceiving.setText(s.getDonwloadSpeed());
+                            lbSending.setText(s.getUploadSpeed());
+                        }
+                    };
+                    executorService.scheduleAtFixedRate(t2, 0, 20, TimeUnit.SECONDS);
+
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
@@ -305,7 +316,7 @@ public class homeGUI extends JFrame {
                     isStarted = false;
                     Runtime rt = Runtime.getRuntime();
                     rt.exec("sudo pkill -f snort -u root");
-                    task.cancel();
+                    fileWatcher.cancel();
                     timer.cancel();
                     // snort();
                 } catch (Exception ex) {
@@ -348,16 +359,21 @@ public class homeGUI extends JFrame {
         };
         alertThread.start();
         // monitor snort.alert.fast file
-        task = new FileWatcher( new File("/var/log/snort/snort.alert.fast") ) {
+        fileWatcher = new FileWatcher( new File("/var/log/snort/snort.alert.fast") ) {
             protected void onChange( File file ) {
                 // action on change
                 // System.out.println( "File "+ file.getName() +" have change !" );
                 clearTable();
                 try {
+                    int count = 0;
                     Scanner sc = new Scanner(file);
                     while (sc.hasNextLine()) {
                         String line = sc.nextLine();
-                        createTable(line);
+                        count++;
+                        if (count > lineMarker) {
+                            createTable(line);
+                        }
+
 
                     }
                     sc.close();
@@ -370,7 +386,7 @@ public class homeGUI extends JFrame {
         
         timer = new Timer();
         // repeat the check every second
-        timer.schedule( task , new Date(), 5000 );
+        timer.schedule( fileWatcher , new Date(), 5000 );
     }
 
     public void config() {
@@ -407,13 +423,17 @@ public class homeGUI extends JFrame {
     }
     public void initTable() {
         id = 1;
+        int count = 0;
         try {
             File alertLog = new File("/var/log/snort/snort.alert.fast");
             Scanner sc = new Scanner(alertLog);
             while (sc.hasNextLine()) {
-                String line = sc.nextLine();
-                createTable(line);
+                // String line = sc.nextLine();
+                // createTable(line);
+                sc.nextLine();
+                count++;
             }
+            lineMarker = count;
             sc.close();
         } 
         catch (FileNotFoundException ex) {
