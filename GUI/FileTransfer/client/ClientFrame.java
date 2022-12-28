@@ -25,7 +25,7 @@ public class ClientFrame extends JFrame implements ActionListener, ISocketListen
 	JList<String> list;
 	ClientSocketThread clientSocketThread = null;
 
-	public static void createFrame() {
+	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
 			@Override
 			public void run() {

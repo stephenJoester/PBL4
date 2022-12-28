@@ -8,7 +8,7 @@ import java.util.Scanner;
 public class FileWorker {
 
 	// public static String URL_FOLDER = "C:\\Users\\HP\\eclipse-workspace\\testftppbl\\src\\ServerFiles";
-	public static String URL_FOLDER = "ServerFiles";
+	public static String URL_FOLDER = "FileTransfer/ServerFiles";
 
 	String[] getAllFileName() {
 		File file = new File(URL_FOLDER);
