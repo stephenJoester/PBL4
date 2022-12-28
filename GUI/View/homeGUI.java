@@ -233,7 +233,7 @@ public class homeGUI extends JFrame {
         panel_1.add(lblNewLabel_2_6);
         
         JLabel lbOS = new JLabel(".");
-        lbOS.setBounds(509, 20, 144, 14);
+        lbOS.setBounds(509, 20, 160, 14);
         panel_1.add(lbOS);
         
         JLabel lbVersion = new JLabel(".");
@@ -283,6 +283,8 @@ public class homeGUI extends JFrame {
                             lbCPU.setText(cpu_utilized + "%");
                             lbMemory.setText(s.getMemoryUtilized());
                             lbDisk.setText(s.getDiskUsage());
+                            lbOS.setText(s.getOS());
+                            lbVersion.setText(s.getSnortVer());
                         }
                     };
                     executorService.scheduleAtFixedRate(t, 0, 5, TimeUnit.SECONDS);

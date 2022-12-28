@@ -1,8 +1,10 @@
 package Class;
 
 import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.Buffer;
+import java.io.PrintStream;
 import java.text.DecimalFormat;
 
 public class sensor {
@@ -12,6 +14,8 @@ public class sensor {
     private double availableMemory;
     private double usedDisk;
     private String usedDiskPercentage;
+    private String osVer;
+    private String snortVer;
     public static String formatFileSize(double size, String type) {
         String hrSize = null;
     
@@ -35,6 +39,8 @@ public class sensor {
         CPU();
         Memory();
         Disk();
+        OS();
+        Snort();
     }
     public void CPU() {
         try {
@@ -100,6 +106,47 @@ public class sensor {
             ex.printStackTrace();
         }
     } 
+    public void speedTest() {
+        try {
+            Process proc = new ProcessBuilder("/bin/bash","-c","speedtest").start();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+            String output;
+            // while (())
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+    public void OS() {
+        try {
+            String[] args = new String[] {"/bin/bash", "-c", "lsb_release -r", "with", "args"};
+            Process proc = new ProcessBuilder(args).start();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+            String output;
+            while ((output = reader.readLine())!=null) {
+                osVer = output;
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+    public void Snort() {
+        try {
+            Runtime rt = Runtime.getRuntime();
+            Process proc = rt.exec("snort -V");
+            Thread errorGobbler = new Thread(new StreamGobbler(proc.getErrorStream(), System.err));
+            Thread outputGobbler = new Thread(new StreamGobbler(proc.getInputStream(), System.out));
+            errorGobbler.start();
+            outputGobbler.start();
+            int exitVal = proc.waitFor();
+            errorGobbler.join();
+            outputGobbler.join();
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
     public String getCPUUtilized() {
         return String.valueOf(cpu_utilized);
     }
@@ -110,4 +157,35 @@ public class sensor {
     public String getDiskUsage() {
         return formatFileSize(usedDisk, "g") + " (" + usedDiskPercentage + ")";
     }
+    public String getOS() {
+        return "Ubuntu " + osVer;
+    }
+    public String getSnortVer() {
+        return snortVer;
+    }
+    class StreamGobbler implements Runnable {
+        private final InputStream is;
+        private final PrintStream os;
+        StreamGobbler(InputStream is, PrintStream os) {
+        this.is = is;
+        this.os = os;
+        }
+    
+        public void run() {
+        try {
+            String output;
+            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+            while ((output = reader.readLine()) != null) 
+            {
+                if (output.contains("Version")) {
+                    String[] words = output.split("\\s+");
+                    snortVer = words[4];
+                }
+            }
+        } catch (IOException x) {
+            // Handle error
+        }
+        }
+    }
 }
+
