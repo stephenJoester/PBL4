@@ -121,12 +121,6 @@ public class homeGUI extends JFrame {
         
         JButton btnConfig = new JButton("Config");
         btnConfig.setFont(new Font("Segoe UI", Font.PLAIN, 11));
-        // event listener
-        btnConfig.addActionListener(new ActionListener() {
-        	public void actionPerformed(ActionEvent e) {
-                config();
-        	}
-        });
         btnConfig.setBounds(10, 162, 89, 23);
         
         panel.add(btnConfig);
@@ -331,11 +325,15 @@ public class homeGUI extends JFrame {
         // edit rules
         btnEditRules.addActionListener(new ActionListener() {
         	public void actionPerformed(ActionEvent e) {
-                ruleEdit re = new ruleEdit();
-                re.createFrame();
+                ruleEdit.createFrame();
         	}
         });
 
+        btnConfig.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                Config.createFrame();
+            }
+        });
         frame.setVisible(true);
 	}
     public void snort() throws Exception {

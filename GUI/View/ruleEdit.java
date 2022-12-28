@@ -49,6 +49,7 @@ public class ruleEdit extends JFrame {
 			public void run() {
 				try {
 					ruleEdit frame = new ruleEdit();
+                    frame.setName("Rule edit");
 					frame.setVisible(true);
                     frame.addWindowListener(new WindowAdapter() {
                         public void windowClosing(WindowEvent e) {
@@ -217,7 +218,7 @@ public class ruleEdit extends JFrame {
             String line;
             while ((line = br.readLine())!=null) {
                 modelList.addElement(line);
-                // System.out.println(line);
+                System.out.println(line);
             }
             file.close();
             br.close();
