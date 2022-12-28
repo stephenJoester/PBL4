@@ -43,6 +43,7 @@ public class homeGUI extends JFrame {
     private PieChart piechart;
     private JPanel panelChart;
     private Vector<String> listProtocol = new Vector<String>();
+    private Vector<String> listMessage = new Vector<String>();
     private ModelPieChart tcp, icmp, udp, ip, arp;
     private Thread alertThread;
     private TimerTask fileWatcher;
@@ -73,7 +74,7 @@ public class homeGUI extends JFrame {
         frame.getContentPane().setLayout(null);
         frame.setLocationRelativeTo(null);
         frame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
-        frame.setBounds(100,100,757,610);
+        frame.setBounds(100,100,756,642);
 
         model = new DefaultTableModel() {
             public boolean isCellEditable(int row, int column) {
@@ -156,10 +157,11 @@ public class homeGUI extends JFrame {
         frame.getContentPane().add(panelChart);
         
         JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
-        tabbedPane.setBounds(10, 265, 721, 295);
+        tabbedPane.setBounds(10, 265, 721, 327);
         frame.getContentPane().add(tabbedPane);
         
         JPanel panel_1 = new JPanel();
+        panel_1.setBackground(Color.WHITE);
         tabbedPane.addTab("Monitoring", null, panel_1, null);
         panel_1.setLayout(null);
         
@@ -234,22 +236,32 @@ public class homeGUI extends JFrame {
         JLabel lbVersion = new JLabel(".");
         lbVersion.setBounds(509, 58, 144, 14);
         panel_1.add(lbVersion);
+        
+        JPanel panel_2 = new JPanel();
+        tabbedPane.addTab("Alert", null, panel_2, null);
+        panel_2.setLayout(null);
         table = new JTable();
         table.setRowHeight(30);
         table.setAutoCreateRowSorter(true);
         table.setModel(model);
         
         JScrollPane scrollPane1 = new JScrollPane(table);
-        tabbedPane.addTab("Detail", null, scrollPane1, null);
-
-        initTable();
-
+        scrollPane1.setBounds(0, 52, 716, 247);
+        panel_2.add(scrollPane1);
+        
+        JButton btnDetail = new JButton("Detail");
+        btnDetail.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        btnDetail.setBounds(531, 18, 89, 23);
+        panel_2.add(btnDetail);
+        
         // component listener - scroll to the bottom of table
         table.addComponentListener(new ComponentAdapter() {
             public void componentResized(ComponentEvent e) {
                 table.scrollRectToVisible(table.getCellRect(table.getRowCount()-1, 0, true));
             }
         });
+
+        initTable();
     
         // item event combobox
         cbbInterface.addItemListener(new ItemListener() {
@@ -334,6 +346,13 @@ public class homeGUI extends JFrame {
                 Config.createFrame();
             }
         });
+
+        // Xem detail log
+        btnDetail.addActionListener(new ActionListener() {
+        	public void actionPerformed(ActionEvent e) {
+                DetailLog.createFrame(lineMarker);
+        	}
+        });
         frame.setVisible(true);
 	}
     public void snort() throws Exception {
@@ -361,7 +380,7 @@ public class homeGUI extends JFrame {
             protected void onChange( File file ) {
                 // action on change
                 // System.out.println( "File "+ file.getName() +" have change !" );
-                clearTable();
+                // clearTable();
                 try {
                     int count = 0;
                     Scanner sc = new Scanner(file);
@@ -387,16 +406,6 @@ public class homeGUI extends JFrame {
         timer.schedule( fileWatcher , new Date(), 5000 );
     }
 
-    public void config() {
-        try {
-            ProcessBuilder builder = new ProcessBuilder("/bin/bash","-c","sudo vim /etc/snort/snort.conf");
-            builder.inheritIO();
-            Process proc = builder.start();
-            proc.waitFor();
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-    }
     private void initiComponents() {
         piechart = new PieChart();
         piechart.setFont(new java.awt.Font("sansserif",1,12));
@@ -419,6 +428,8 @@ public class homeGUI extends JFrame {
         pack();
         setLocationRelativeTo(null);
     }
+
+    // Tiep tuc tu line tiep theo cua session truoc
     public void initTable() {
         id = 1;
         int count = 0;
@@ -449,6 +460,23 @@ public class homeGUI extends JFrame {
         row[3] = list.elementAt(3); // source
         row[4] = list.elementAt(4); // destination
         row[5] = list.elementAt(2); // protocol
+
+        // Neu message xuat hien lan dau thi add vao list
+        if (!listMessage.contains(list.elementAt(1))) {
+            listMessage.addElement(list.elementAt(1));
+            model.addRow(row);
+            id++;
+        }
+        // Neu ton tai message roi thi replace row voi alert moi nhat
+        else {
+            Object[] updateData = new Object[4];
+            for (int i=0;i<4;i++) {
+                updateData[i] = row[i+2];
+            }
+            updateRow(list.elementAt(1), updateData);
+        }
+
+        // Same voi protocol
         if (!listProtocol.contains(list.elementAt(2))) {
             String name = list.elementAt(2);
             listProtocol.addElement(name); 
@@ -482,6 +510,7 @@ public class homeGUI extends JFrame {
             }
             
         }   
+        // +1 neu protocol ton tai
         else {
             String name = list.elementAt(2);
             switch (name) {
@@ -507,15 +536,23 @@ public class homeGUI extends JFrame {
                 }
             }
         }
-        model.addRow(row);
+        // model.addRow(row);
         // table.setModel(model);
-        id++;
     }
     
     public void clearTable() {
         id = 1;
         model.setRowCount(0);
     }
-
+    private void updateRow(String msg, Object[] data) {
+        
+        for (int i=0;i<model.getRowCount();i++) {
+            if (model.getValueAt(i, 1).equals(msg)) {
+                for (int j=0;j<data.length;j++) {
+                    model.setValueAt(data[j], i, j+2);
+                }
+            }
+        } 
+    }
 }
 

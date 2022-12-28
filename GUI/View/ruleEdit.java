@@ -218,7 +218,6 @@ public class ruleEdit extends JFrame {
             String line;
             while ((line = br.readLine())!=null) {
                 modelList.addElement(line);
-                System.out.println(line);
             }
             file.close();
             br.close();
