@@ -43,10 +43,12 @@ public class homeGUI extends JFrame {
     private PieChart piechart;
     private JPanel panelChart;
     private Vector<String> listProtocol = new Vector<String>();
+    private Vector<String> listMessage = new Vector<String>();
     private ModelPieChart tcp, icmp, udp, ip, arp;
     private Thread alertThread;
-    private TimerTask task;
+    private TimerTask fileWatcher;
     private Timer timer;
+    private int lineMarker;
 	/**
 	 * Launch the application.
 	 */
@@ -72,7 +74,7 @@ public class homeGUI extends JFrame {
         frame.getContentPane().setLayout(null);
         frame.setLocationRelativeTo(null);
         frame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
-        frame.setBounds(100,100,757,610);
+        frame.setBounds(100,100,756,642);
 
         model = new DefaultTableModel() {
             public boolean isCellEditable(int row, int column) {
@@ -120,12 +122,6 @@ public class homeGUI extends JFrame {
         
         JButton btnConfig = new JButton("Config");
         btnConfig.setFont(new Font("Segoe UI", Font.PLAIN, 11));
-        // event listener
-        btnConfig.addActionListener(new ActionListener() {
-        	public void actionPerformed(ActionEvent e) {
-                config();
-        	}
-        });
         btnConfig.setBounds(10, 162, 89, 23);
         
         panel.add(btnConfig);
@@ -161,10 +157,11 @@ public class homeGUI extends JFrame {
         frame.getContentPane().add(panelChart);
         
         JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
-        tabbedPane.setBounds(10, 265, 721, 295);
+        tabbedPane.setBounds(10, 265, 721, 327);
         frame.getContentPane().add(tabbedPane);
         
         JPanel panel_1 = new JPanel();
+        panel_1.setBackground(Color.WHITE);
         tabbedPane.addTab("Monitoring", null, panel_1, null);
         panel_1.setLayout(null);
         
@@ -233,28 +230,38 @@ public class homeGUI extends JFrame {
         panel_1.add(lblNewLabel_2_6);
         
         JLabel lbOS = new JLabel(".");
-        lbOS.setBounds(509, 20, 144, 14);
+        lbOS.setBounds(509, 20, 160, 14);
         panel_1.add(lbOS);
         
         JLabel lbVersion = new JLabel(".");
         lbVersion.setBounds(509, 58, 144, 14);
         panel_1.add(lbVersion);
+        
+        JPanel panel_2 = new JPanel();
+        tabbedPane.addTab("Alert", null, panel_2, null);
+        panel_2.setLayout(null);
         table = new JTable();
         table.setRowHeight(30);
         table.setAutoCreateRowSorter(true);
         table.setModel(model);
         
         JScrollPane scrollPane1 = new JScrollPane(table);
-        tabbedPane.addTab("Detail", null, scrollPane1, null);
-
-        initTable();
-
+        scrollPane1.setBounds(0, 52, 716, 247);
+        panel_2.add(scrollPane1);
+        
+        JButton btnDetail = new JButton("Detail");
+        btnDetail.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        btnDetail.setBounds(531, 18, 89, 23);
+        panel_2.add(btnDetail);
+        
         // component listener - scroll to the bottom of table
         table.addComponentListener(new ComponentAdapter() {
             public void componentResized(ComponentEvent e) {
                 table.scrollRectToVisible(table.getCellRect(table.getRowCount()-1, 0, true));
             }
         });
+
+        initTable();
     
         // item event combobox
         cbbInterface.addItemListener(new ItemListener() {
@@ -276,17 +283,29 @@ public class homeGUI extends JFrame {
                     snort();
                     ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
                     
-                    Thread t = new Thread() {
+                    Thread t1 = new Thread() {
                         public void run() {
                             sensor s = new sensor();
                             String cpu_utilized = s.getCPUUtilized();
                             lbCPU.setText(cpu_utilized + "%");
                             lbMemory.setText(s.getMemoryUtilized());
                             lbDisk.setText(s.getDiskUsage());
+                            lbOS.setText(s.getOS());
+                            lbVersion.setText(s.getSnortVer());
                         }
                     };
-                    executorService.scheduleAtFixedRate(t, 0, 5, TimeUnit.SECONDS);
+                    executorService.scheduleAtFixedRate(t1, 0, 5, TimeUnit.SECONDS);
                     
+                    Thread t2 = new Thread() {
+                        public void run() {
+                            sensor s = new sensor();
+                            s.speedTest();
+                            lbReceiving.setText(s.getDonwloadSpeed());
+                            lbSending.setText(s.getUploadSpeed());
+                        }
+                    };
+                    executorService.scheduleAtFixedRate(t2, 0, 20, TimeUnit.SECONDS);
+
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
@@ -303,7 +322,7 @@ public class homeGUI extends JFrame {
                     isStarted = false;
                     Runtime rt = Runtime.getRuntime();
                     rt.exec("sudo pkill -f snort -u root");
-                    task.cancel();
+                    fileWatcher.cancel();
                     timer.cancel();
                     // snort();
                 } catch (Exception ex) {
@@ -318,11 +337,22 @@ public class homeGUI extends JFrame {
         // edit rules
         btnEditRules.addActionListener(new ActionListener() {
         	public void actionPerformed(ActionEvent e) {
-                ruleEdit re = new ruleEdit();
-                re.createFrame();
+                ruleEdit.createFrame();
         	}
         });
 
+        btnConfig.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                Config.createFrame();
+            }
+        });
+
+        // Xem detail log
+        btnDetail.addActionListener(new ActionListener() {
+        	public void actionPerformed(ActionEvent e) {
+                DetailLog.createFrame(lineMarker);
+        	}
+        });
         frame.setVisible(true);
 	}
     public void snort() throws Exception {
@@ -346,16 +376,21 @@ public class homeGUI extends JFrame {
         };
         alertThread.start();
         // monitor snort.alert.fast file
-        task = new FileWatcher( new File("/var/log/snort/snort.alert.fast") ) {
+        fileWatcher = new FileWatcher( new File("/var/log/snort/snort.alert.fast") ) {
             protected void onChange( File file ) {
                 // action on change
                 // System.out.println( "File "+ file.getName() +" have change !" );
-                clearTable();
+                // clearTable();
                 try {
+                    int count = 0;
                     Scanner sc = new Scanner(file);
                     while (sc.hasNextLine()) {
                         String line = sc.nextLine();
-                        createTable(line);
+                        count++;
+                        if (count > lineMarker) {
+                            createTable(line);
+                        }
+
 
                     }
                     sc.close();
@@ -368,19 +403,9 @@ public class homeGUI extends JFrame {
         
         timer = new Timer();
         // repeat the check every second
-        timer.schedule( task , new Date(), 5000 );
+        timer.schedule( fileWatcher , new Date(), 5000 );
     }
 
-    public void config() {
-        try {
-            ProcessBuilder builder = new ProcessBuilder("/bin/bash","-c","sudo vim /etc/snort/snort.conf");
-            builder.inheritIO();
-            Process proc = builder.start();
-            proc.waitFor();
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-    }
     private void initiComponents() {
         piechart = new PieChart();
         piechart.setFont(new java.awt.Font("sansserif",1,12));
@@ -403,15 +428,21 @@ public class homeGUI extends JFrame {
         pack();
         setLocationRelativeTo(null);
     }
+
+    // Tiep tuc tu line tiep theo cua session truoc
     public void initTable() {
         id = 1;
+        int count = 0;
         try {
             File alertLog = new File("/var/log/snort/snort.alert.fast");
             Scanner sc = new Scanner(alertLog);
             while (sc.hasNextLine()) {
-                String line = sc.nextLine();
-                createTable(line);
+                // String line = sc.nextLine();
+                // createTable(line);
+                sc.nextLine();
+                count++;
             }
+            lineMarker = count;
             sc.close();
         } 
         catch (FileNotFoundException ex) {
@@ -429,6 +460,23 @@ public class homeGUI extends JFrame {
         row[3] = list.elementAt(3); // source
         row[4] = list.elementAt(4); // destination
         row[5] = list.elementAt(2); // protocol
+
+        // Neu message xuat hien lan dau thi add vao list
+        if (!listMessage.contains(list.elementAt(1))) {
+            listMessage.addElement(list.elementAt(1));
+            model.addRow(row);
+            id++;
+        }
+        // Neu ton tai message roi thi replace row voi alert moi nhat
+        else {
+            Object[] updateData = new Object[4];
+            for (int i=0;i<4;i++) {
+                updateData[i] = row[i+2];
+            }
+            updateRow(list.elementAt(1), updateData);
+        }
+
+        // Same voi protocol
         if (!listProtocol.contains(list.elementAt(2))) {
             String name = list.elementAt(2);
             listProtocol.addElement(name); 
@@ -462,6 +510,7 @@ public class homeGUI extends JFrame {
             }
             
         }   
+        // +1 neu protocol ton tai
         else {
             String name = list.elementAt(2);
             switch (name) {
@@ -487,15 +536,23 @@ public class homeGUI extends JFrame {
                 }
             }
         }
-        model.addRow(row);
+        // model.addRow(row);
         // table.setModel(model);
-        id++;
     }
     
     public void clearTable() {
         id = 1;
         model.setRowCount(0);
     }
-
+    private void updateRow(String msg, Object[] data) {
+        
+        for (int i=0;i<model.getRowCount();i++) {
+            if (model.getValueAt(i, 1).equals(msg)) {
+                for (int j=0;j<data.length;j++) {
+                    model.setValueAt(data[j], i, j+2);
+                }
+            }
+        } 
+    }
 }
 
