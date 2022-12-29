@@ -31,6 +31,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowAdapter;
 
 public class homeGUI extends JFrame {
 
@@ -58,6 +60,16 @@ public class homeGUI extends JFrame {
 				try {
 					homeGUI home = new homeGUI();
                     // home.createTable();
+                    home.addWindowListener(new WindowAdapter() {
+                        public void windowClosing(WindowEvent e) {
+                            // Process change permission 
+                            try {
+                                System.exit(0);
+                            } catch (Exception ex) {
+                                ex.printStackTrace();
+                            }
+                        }
+                    });
 				} catch (Exception e) {
                     e.printStackTrace();
 				}
@@ -320,8 +332,8 @@ public class homeGUI extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 try {
                     isStarted = false;
-                    Runtime rt = Runtime.getRuntime();
-                    rt.exec("sudo pkill -f snort -u root");
+                    // Runtime rt = Runtime.getRuntime();
+                    // rt.exec("sudo pkill -f snort -u root");
                     fileWatcher.cancel();
                     timer.cancel();
                     // snort();
@@ -376,7 +388,7 @@ public class homeGUI extends JFrame {
         };
         alertThread.start();
         // monitor snort.alert.fast file
-        fileWatcher = new FileWatcher( new File("/var/log/snort/snort.alert.fast") ) {
+        fileWatcher = new FileWatcher( new File("/var/log/snort/alert") ) {
             protected void onChange( File file ) {
                 // action on change
                 // System.out.println( "File "+ file.getName() +" have change !" );
@@ -434,7 +446,7 @@ public class homeGUI extends JFrame {
         id = 1;
         int count = 0;
         try {
-            File alertLog = new File("/var/log/snort/snort.alert.fast");
+            File alertLog = new File("/var/log/snort/alert");
             Scanner sc = new Scanner(alertLog);
             while (sc.hasNextLine()) {
                 // String line = sc.nextLine();

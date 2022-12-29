@@ -92,7 +92,7 @@ public class DetailLog extends JFrame {
     public void initTable() {
         try {
             id = 1;
-            File alertLog = new File("/var/log/snort/snort.alert.fast");
+            File alertLog = new File("/var/log/snort/alert");
             int count = 0;
             Scanner sc = new Scanner(alertLog);
             while (sc.hasNextLine()) {
@@ -111,7 +111,7 @@ public class DetailLog extends JFrame {
 
     public void monitoring() {
 		
-		fileWatcher = new FileWatcher( new File("/var/log/snort/snort.alert.fast") ) {
+		fileWatcher = new FileWatcher( new File("/var/log/snort/alert") ) {
             protected void onChange( File file ) {
                 // action on change
                 // System.out.println( "File "+ file.getName() +" have change !" );
@@ -142,15 +142,21 @@ public class DetailLog extends JFrame {
 		analyzeLine al = new analyzeLine(line);
         Vector<String> list = al.getList();
 
-        Object[] row = new Object[6];
-        row[0] = "#" + id; // id
-        row[1] = list.elementAt(1); // message
-        row[2] = list.elementAt(0); // timestamp
-        row[3] = list.elementAt(3); // source
-        row[4] = list.elementAt(4); // destination
-        row[5] = list.elementAt(2); // protocol
-        id++;
-		model.addRow(row);
+        try {
+            Object[] row = new Object[6];
+            row[0] = "#" + id; // id
+            row[1] = list.elementAt(1); // message
+            row[2] = list.elementAt(0); // timestamp
+            row[3] = list.elementAt(3); // source
+            row[4] = list.elementAt(4); // destination
+            row[5] = list.elementAt(2); // protocol
+            id++;
+            model.addRow(row);
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        
 	}
 
 	public void clearTable() {

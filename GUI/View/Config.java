@@ -111,7 +111,7 @@ public class Config extends JFrame {
         btnSave.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
                 saveConfig(txtHomeNet.getText(), txtExternalNet.getText());
-				btnSave.setEnabled(false);
+				// btnSave.setEnabled(false);
 			}
 		});
 
