@@ -152,7 +152,7 @@ public class sensor {
             Thread outputGobbler = new Thread(new StreamGobbler(proc.getInputStream(), System.out));
             errorGobbler.start();
             outputGobbler.start();
-            int exitVal = proc.waitFor();
+            proc.waitFor();
             errorGobbler.join();
             outputGobbler.join();
         }

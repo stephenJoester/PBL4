@@ -10,7 +10,7 @@ public class interfaceItem {
     
     public interfaceItem(NetworkInterface e) {
         this.name = e.getName();
-        Enumeration a = e.getInetAddresses();
+        Enumeration<InetAddress> a = e.getInetAddresses();
         int count = 0;
         for ( ; a.hasMoreElements(); count++) {
             InetAddress addr = (InetAddress) a.nextElement();

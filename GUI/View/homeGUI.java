@@ -6,17 +6,13 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import java.awt.*;
-import java.io.*;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.InputStreamReader;
 import java.util.*;
 import java.util.Timer;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.table.DefaultTableModel;
@@ -86,7 +82,7 @@ public class homeGUI extends JFrame {
         frame.getContentPane().setLayout(null);
         frame.setLocationRelativeTo(null);
         frame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
-        frame.setBounds(100,100,756,642);
+        frame.setBounds(100,100,810,642);
 
         model = new DefaultTableModel() {
             public boolean isCellEditable(int row, int column) {
@@ -169,7 +165,7 @@ public class homeGUI extends JFrame {
         frame.getContentPane().add(panelChart);
         
         JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
-        tabbedPane.setBounds(10, 265, 721, 327);
+        tabbedPane.setBounds(10, 265, 774, 327);
         frame.getContentPane().add(tabbedPane);
         
         JPanel panel_1 = new JPanel();
@@ -258,12 +254,12 @@ public class homeGUI extends JFrame {
         table.setModel(model);
         
         JScrollPane scrollPane1 = new JScrollPane(table);
-        scrollPane1.setBounds(0, 52, 716, 247);
+        scrollPane1.setBounds(0, 52, 769, 247);
         panel_2.add(scrollPane1);
         
         JButton btnDetail = new JButton("Detail");
         btnDetail.setFont(new Font("Segoe UI", Font.PLAIN, 11));
-        btnDetail.setBounds(531, 18, 89, 23);
+        btnDetail.setBounds(621, 11, 89, 23);
         panel_2.add(btnDetail);
         
         // component listener - scroll to the bottom of table

@@ -1,6 +1,5 @@
 package View;
 
-import java.awt.BorderLayout;
 import java.awt.EventQueue;
 
 import javax.swing.JFrame;
@@ -11,19 +10,16 @@ import java.awt.Font;
 import java.util.Scanner;
 import java.util.Vector;
 
-import javax.annotation.processing.FilerException;
 import javax.swing.JButton;
 import javax.swing.JTextField;
 import javax.swing.JComboBox;
 import Class.*;
 import java.awt.event.ActionListener;
-import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.InputStreamReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.lang.ProcessBuilder.Redirect;
 import java.awt.event.ActionEvent;
 public class Config extends JFrame {
 
@@ -32,6 +28,7 @@ public class Config extends JFrame {
 	private static JTextField txtExternalNet;
 	private static long homenetPos;
 	private static long externalnetPos;
+	private String networkInterface;
 	/**
 	 * Launch the application.
 	 */
@@ -101,15 +98,29 @@ public class Config extends JFrame {
 		JComboBox cbbInterface = new JComboBox();
 		cbbInterface.setBounds(177, 123, 204, 22);
         Vector<interfaceItem> list = new listInterfaces().getList();
-        cbbInterface.addItem(new comboItem("Chọn", ""));
+		int index = 0;
         for (int i=0;i<list.size();i++) {
             cbbInterface.addItem(new comboItem(list.elementAt(i).getName(),String.valueOf(i)));
+			if (list.elementAt(i).getName().equals(networkInterface)) {
+				index = i;
+			}
         }
+		cbbInterface.setSelectedIndex(index);
 		contentPane.add(cbbInterface);
-
         // save
         btnSave.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				Object item = cbbInterface.getSelectedItem();
+				String str = ((comboItem)item).getKey();
+				try {
+					BufferedWriter bw = new BufferedWriter(new FileWriter("View/interface.txt"));
+					bw.write(str);
+					bw.close();
+				}
+				catch (IOException ex) {
+					ex.printStackTrace();
+				}
+
                 saveConfig(txtHomeNet.getText(), txtExternalNet.getText());
 				// btnSave.setEnabled(false);
 			}
@@ -133,6 +144,7 @@ public class Config extends JFrame {
 			str = "ipvar EXTERNAL_NET " + externalnet + "\n";
 			raf.write(str.getBytes());
 			raf.close();
+			
 		}
 		catch (Exception ex) {
 			ex.printStackTrace();
@@ -140,9 +152,17 @@ public class Config extends JFrame {
 	}
 
     private void initiConfig() {
-        // change permission
-        try {
-            ProcessBuilder builder = new ProcessBuilder("/bin/bash","-c","sudo chmod a+rw /etc/snort/snort.conf");
+		
+		try {
+			File file = new File("View/interface.txt");
+			Scanner sc = new Scanner(file);
+			while (sc.hasNextLine()) {
+				networkInterface = sc.nextLine();
+				// System.out.println(networkInterface);
+			}
+			sc.close();
+			// change permission
+			ProcessBuilder builder = new ProcessBuilder("/bin/bash","-c","sudo chmod a+rw /etc/snort/snort.conf");
             Process proc = builder.start();
             proc.waitFor();
 

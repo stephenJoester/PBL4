@@ -1,28 +1,21 @@
 package View;
 
-import java.awt.BorderLayout;
 import java.awt.EventQueue;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
-import javax.swing.JComboBox;
-import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListModel;
-import javax.swing.JTextField;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
 import javax.swing.JScrollPane;
 import javax.swing.JList;
 import javax.swing.JLabel;
@@ -37,8 +30,8 @@ import java.awt.event.WindowAdapter;
 public class ruleEdit extends JFrame {
 
 	private JPanel contentPane;
-    private JList listRules;
-    private DefaultListModel modelList;
+    private JList<String> listRules;
+    private DefaultListModel<String> modelList;
     private Boolean editing = false;
     private int index = 0;
 	/**
@@ -83,7 +76,7 @@ public class ruleEdit extends JFrame {
 		
 		JScrollPane scrollPane = new JScrollPane();
 		scrollPane.setBounds(10, 36, 627, 154);
-		listRules = new JList();
+		listRules = new JList<String>();
 		listRules.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {

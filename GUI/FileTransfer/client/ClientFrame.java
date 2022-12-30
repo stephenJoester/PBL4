@@ -30,7 +30,7 @@ public class ClientFrame extends JFrame implements ActionListener, ISocketListen
 			@Override
 			public void run() {
 				try {
-					ClientFrame frame = new ClientFrame();
+					new ClientFrame();
 
 				} catch (Exception e) {
 					e.printStackTrace();

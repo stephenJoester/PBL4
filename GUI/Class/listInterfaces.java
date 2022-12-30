@@ -8,7 +8,7 @@ public class listInterfaces {
 
     public listInterfaces() {
         listInterface = new Vector<interfaceItem>();
-        Enumeration n = null;
+        Enumeration<NetworkInterface> n = null;
         try {
             // get all interfaces
             n = NetworkInterface.getNetworkInterfaces();
